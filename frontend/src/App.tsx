@@ -14,10 +14,14 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import React from "react";
 import SearchResultsPage from "./components/SearchResultsPage.tsx";
+import { AuthProvider } from './context/AuthContext.tsx';
+import { CartProvider } from './context/CartContext';
 
 const queryClient = new QueryClient();
 
 const App = () => (
+  <AuthProvider>
+      <CartProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -38,6 +42,8 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </CartProvider>
+    </AuthProvider>
 );
 
 export default App;
