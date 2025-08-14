@@ -3,7 +3,7 @@ import { Menu, X, Leaf, Search, ShoppingCart, User, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import AuthModal from '@/components/AuthModal';
+import { AuthModal } from '@/components/auth/AuthModal';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
@@ -14,7 +14,7 @@ const Navbar = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode] = useState<'login' | 'register'>('login'); // Only login mode now
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   // Hooks
   const { user, logout } = useAuth();
@@ -46,6 +46,7 @@ const Navbar = () => {
 
   const handleCheckout = () => {
     if (!user) {
+      setAuthModalMode('login');
       setAuthModalOpen(true);
       setShowCartDropdown(false);
     } else {
@@ -105,7 +106,7 @@ const Navbar = () => {
                 aria-label="User profile"
               >
                 <User className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
-                <Zap className="absolute -top-1 left-3 h-3 w-3 text-yellow-500" />
+                {user && <Zap className="absolute -top-1 left-3 h-3 w-3 text-yellow-500" />}
               </button>
               
               {showProfileDropdown && (
@@ -133,15 +134,28 @@ const Navbar = () => {
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => {
-                        setAuthModalOpen(true);
-                        setShowProfileDropdown(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Login
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          setAuthModalMode('login');
+                          setAuthModalOpen(true);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Login
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAuthModalMode('register');
+                          setAuthModalOpen(true);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Register
+                      </button>
+                    </>
                   )}
                 </div>
               )}
@@ -310,16 +324,29 @@ const Navbar = () => {
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600"
-                  >
-                    <User className="h-5 w-5 mr-2" />
-                    Login
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setAuthModalMode('login');
+                        setAuthModalOpen(true);
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600"
+                    >
+                      <User className="h-5 w-5 mr-2" />
+                      Login
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAuthModalMode('register');
+                        setAuthModalOpen(true);
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600 mt-2"
+                    >
+                      Register
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -329,9 +356,9 @@ const Navbar = () => {
 
       {/* Auth Modal */}
       <AuthModal 
-        isOpen={authModalOpen} 
+        isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        defaultMode="login" // Only login mode now
+        defaultMode={authModalMode}
       />
     </nav>
   );
