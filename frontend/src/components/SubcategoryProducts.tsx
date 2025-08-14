@@ -25,7 +25,7 @@ const SubcategoryProducts: React.FC = () => {
   useEffect(() => {
     if (category && subcategory) {
       axios
-        .get<Product[]>(`http://localhost:5000/api/products/subcategory-products`, {
+        .get<Product[]>(`https://swan-botanical.onrender.com/api/products/subcategory-products`, {
           params: { category, subcategory }
         })
         .then((res) => setProducts(res.data))

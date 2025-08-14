@@ -17,7 +17,7 @@ const SearchResultsPage: React.FC = () => {
 
   useEffect(() => {
     if (searchQuery) {
-      fetch(`http://localhost:5000/api/products/search?query=${encodeURIComponent(searchQuery)}`)
+      fetch(`https://swan-botanical.onrender.com/api/products/search?query=${encodeURIComponent(searchQuery)}`)
         .then((res) => res.json())
         .then((data) => setProducts(data))
         .catch((err) => console.error(err));
