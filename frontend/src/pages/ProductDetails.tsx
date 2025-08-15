@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useCart } from '@/context/CartContext';
+import { toast } from '@/hooks/use-toast';
 import { 
   Star, 
   Heart, 
@@ -46,6 +48,21 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [isSubscription, setIsSubscription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+  addToCart({
+    id: product.id,
+    name: product.name,
+    price: currentPrice,
+    image: product.images[0],
+    quantity: quantity // This will now work with the updated CartContext
+  });
+  toast({
+    title: "Added to Cart",
+    description: `${quantity} × ${product.name} added to cart`,
+  });
+};
 
   // Mock product data - in real app, fetch based on id
   const product = {
@@ -360,7 +377,11 @@ const ProductDetails = () => {
               </div>
               
               <div className="flex gap-3">
-                <Button size="lg" className="flex-1 font-open-sans">
+                <Button 
+                  size="lg" 
+                  className="flex-1 font-open-sans"
+                  onClick={handleAddToCart}
+                >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>

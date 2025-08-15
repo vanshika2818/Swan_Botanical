@@ -5,18 +5,21 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { CartIcon } from './ui/CartIcon';
 
 const Navbar = () => {
   // State management
-  const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');  // Hooks
-const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  const { cart, cartCount, removeFromCart } = useCart();
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+
+  // Hooks
+  const { isAuthenticated, user, logout, loading: authLoading } = useAuth();
+  const { cart, cartCount, removeFromCart, cartTotal } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -58,7 +61,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
     }
   };
 
-    if (authLoading) {
+  if (authLoading) {
     return (
       <div className="bg-white shadow-sm sticky top-0 z-50 h-16 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
@@ -178,18 +181,10 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
 
             {/* Cart Icon with Dropdown */}
             <div className="relative">
-              <button 
+              <CartIcon 
+                itemCount={cartCount}
                 onClick={() => setShowCartDropdown(!showCartDropdown)}
-                className="p-2 relative"
-                aria-label="Shopping cart"
-              >
-                <ShoppingCart className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              />
               
               {showCartDropdown && (
                 <div 
@@ -208,7 +203,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
                             <div>
                               <p className="text-sm font-medium">{item.name}</p>
                               <p className="text-xs text-gray-500">
-                                {item.quantity} × ${item.price.toFixed(2)}
+                                {item.quantity} × ₹{item.price.toFixed(2)}
                               </p>
                             </div>
                             <button 
@@ -225,7 +220,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
                         <div className="flex justify-between mb-2">
                           <span className="text-sm font-medium">Total:</span>
                           <span className="text-sm font-medium">
-                            ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                            ₹{cartTotal.toFixed(2)}
                           </span>
                         </div>
                         <button
@@ -248,9 +243,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(!isOpen)}
-              aria-label={
-                isOpen ? "Close navigation menu" : "Open navigation menu"
-              }
+              aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
               aria-expanded={isOpen}
               className="min-h-[44px] min-w-[44px] p-2"
             >
@@ -287,11 +280,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div
-            className="md:hidden"
-            role="navigation"
-            aria-label="Mobile navigation"
-          >
+          <div className="md:hidden" role="navigation" aria-label="Mobile navigation">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
               {navigation.map((item) => (
                 <Link
@@ -321,11 +310,7 @@ const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  cons
                 </Link>
               </div>
               <div className="px-4 py-3">
-                {isLoading ? (
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
-                  </div>
-                ) : isAuthenticated ? (
+                {isAuthenticated ? (
                   <>
                     <Link
                       to="/profile"
