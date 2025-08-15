@@ -132,7 +132,7 @@ const Navbar = () => {
                   {isAuthenticated ? (
                     <>
                       <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                        Hello, {user?.name}
+                        Hello, User
                       </div>
                       <Link
                         to="/profile"
@@ -163,16 +163,7 @@ const Navbar = () => {
                       >
                         Login
                       </button>
-                      <button
-                        onClick={() => {
-                          setAuthModalMode('register');
-                          setAuthModalOpen(true);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Register
-                      </button>
+                      
                     </>
                   )}
                 </div>
@@ -343,16 +334,7 @@ const Navbar = () => {
                       <User className="h-5 w-5 mr-2" />
                       Login
                     </button>
-                    <button
-                      onClick={() => {
-                        setAuthModalMode('register');
-                        setAuthModalOpen(true);
-                        setIsOpen(false);
-                      }}
-                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600 mt-2"
-                    >
-                      Register
-                    </button>
+                    
                   </>
                 )}
               </div>
