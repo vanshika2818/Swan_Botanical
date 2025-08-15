@@ -23,11 +23,11 @@ const CheckoutPage = () => {
                   <div>
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-gray-500">
-                      {item.quantity} × ${item.price.toFixed(2)}
+                      {item.quantity} × ₹{item.price.toFixed(2)}
                     </p>
                   </div>
                   <p className="font-medium">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toFixed(2)}
                   </p>
                 </div>
               ))}
@@ -35,7 +35,7 @@ const CheckoutPage = () => {
             <div className="flex justify-between font-bold text-lg mb-6">
               <span>Total:</span>
               <span>
-                ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                ₹{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
               </span>
             </div>
             <button
