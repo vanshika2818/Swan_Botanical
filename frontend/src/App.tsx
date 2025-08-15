@@ -1,3 +1,4 @@
+// src/App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,10 +13,12 @@ import Sustainability from "./pages/Sustainability";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import React from "react";
 import SearchResultsPage from "./components/SearchResultsPage.tsx";
-import { AuthProvider } from './context/AuthContext.tsx';
+import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import LoginPage from './components/auth/LoginForm.tsx';
+import RegisterPage from './components/auth/RegisterForm.tsx';
+//import OrdersPage from './pages/Orders';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +40,9 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/search" element={<SearchResultsPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              {/* <Route path="/orders" element={<OrdersPage />} /> */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

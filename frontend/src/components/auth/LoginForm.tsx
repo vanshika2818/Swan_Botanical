@@ -1,34 +1,26 @@
+// src/components/LoginForm.tsx
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
-  onClose: () => void;
-  switchToRegister: () => void;
+  onClose?: () => void;
+  switchToRegister?: () => void;
 }
 
-export const LoginForm = ({ onClose, switchToRegister }: LoginFormProps) => {
+const LoginForm = ({ onClose, switchToRegister }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, error, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    try {
-      const success = await login(email, password);
-      if (success) {
-        onClose();
-        navigate('/');
-      }
-    } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setLoading(false);
+    const success = await login(email, password);
+    if (success) {
+      onClose?.();
+      navigate('/');
     }
   };
 
@@ -72,17 +64,21 @@ export const LoginForm = ({ onClose, switchToRegister }: LoginFormProps) => {
         </button>
       </form>
 
-      <div className="mt-4 text-center">
-        <p className="text-sm">
-          Don't have an account?{' '}
-          <button 
-            onClick={switchToRegister}
-            className="text-emerald-600 hover:underline"
-          >
-            Register
-          </button>
-        </p>
-      </div>
+      {switchToRegister && (
+        <div className="mt-4 text-center">
+          <p className="text-sm">
+            Don't have an account?{' '}
+            <button 
+              onClick={switchToRegister}
+              className="text-emerald-600 hover:underline"
+            >
+              Register
+            </button>
+          </p>
+        </div>
+      )}
     </div>
   );
 };
+
+export default LoginForm; 

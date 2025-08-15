@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { LoginForm } from './LoginForm';
-import { RegisterForm } from './RegisterForm';
+import  LoginForm  from '../auth/LoginForm';
+import  RegisterForm  from '../auth/RegisterForm';
 
 interface AuthModalProps {
   isOpen: boolean;

@@ -1,45 +1,38 @@
+// src/components/RegisterForm.tsx
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface RegisterFormProps {
-  onClose: () => void;
-  switchToLogin: () => void;
+  onClose?: () => void;
+  switchToLogin?: () => void;
 }
 
-export const RegisterForm = ({ onClose, switchToLogin }: RegisterFormProps) => {
+const RegisterForm = ({ onClose, switchToLogin }: RegisterFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [localError, setLocalError] = useState('');
+  const { register, error, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      setError("Passwords don't match!");
+      setLocalError("Passwords don't match!");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setLocalError("Password must be at least 6 characters");
       return;
     }
 
-    setLoading(true);
-    try {
-      const success = await register(email, password);
-      if (success) {
-        onClose();
-        navigate('/');
-      }
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+    const success = await register(email, password);
+    if (success) {
+      onClose?.();
+      navigate('/');
     }
   };
 
@@ -47,8 +40,8 @@ export const RegisterForm = ({ onClose, switchToLogin }: RegisterFormProps) => {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold mb-4 text-center">Create Account</h2>
       
-      {error && (
-        <div className="text-red-500 text-sm text-center">{error}</div>
+      {(error || localError) && (
+        <div className="text-red-500 text-sm text-center">{error || localError}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,17 +88,21 @@ export const RegisterForm = ({ onClose, switchToLogin }: RegisterFormProps) => {
         </button>
       </form>
 
-      <div className="mt-4 text-center">
-        <p className="text-sm">
-          Already have an account?{' '}
-          <button 
-            onClick={switchToLogin}
-            className="text-emerald-600 hover:underline"
-          >
-            Login
-          </button>
-        </p>
-      </div>
+      {switchToLogin && (
+        <div className="mt-4 text-center">
+          <p className="text-sm">
+            Already have an account?{' '}
+            <button 
+              onClick={switchToLogin}
+              className="text-emerald-600 hover:underline"
+            >
+              Login
+            </button>
+          </p>
+        </div>
+      )}
     </div>
   );
 };
+
+export default RegisterForm;

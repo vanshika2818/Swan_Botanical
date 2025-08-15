@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Leaf, Search, ShoppingCart, User, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -8,19 +8,23 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   // State management
+  const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-
-  // Hooks
-  const { user, logout } = useAuth();
-  const { cart, cartCount, removeFromCart } = useCart();
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');  // Hooks
+const { isAuthenticated, user, logout, loading: authLoading } = useAuth();  const { cart, cartCount, removeFromCart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Close dropdowns when auth state changes
+  useEffect(() => {
+    setShowProfileDropdown(false);
+    setShowCartDropdown(false);
+  }, [isAuthenticated]);
 
   // Navigation items
   const navigation = [
@@ -45,7 +49,7 @@ const Navbar = () => {
   };
 
   const handleCheckout = () => {
-    if (!user) {
+    if (!isAuthenticated) {
       setAuthModalMode('login');
       setAuthModalOpen(true);
       setShowCartDropdown(false);
@@ -53,6 +57,14 @@ const Navbar = () => {
       navigate('/checkout');
     }
   };
+
+    if (authLoading) {
+    return (
+      <div className="bg-white shadow-sm sticky top-0 z-50 h-16 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -106,15 +118,18 @@ const Navbar = () => {
                 aria-label="User profile"
               >
                 <User className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
-                {user && <Zap className="absolute -top-1 left-3 h-3 w-3 text-yellow-500" />}
+                {isAuthenticated && <Zap className="absolute -top-1 left-3 h-3 w-3 text-yellow-500" />}
               </button>
               
               {showProfileDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  {user ? (
+                <div 
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  {isAuthenticated ? (
                     <>
                       <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                        Hello, {user.name}
+                        Hello, {user?.name}
                       </div>
                       <Link
                         to="/profile"
@@ -177,7 +192,10 @@ const Navbar = () => {
               </button>
               
               {showCartDropdown && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50">
+                <div 
+                  className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50"
+                  onMouseLeave={() => setShowCartDropdown(false)}
+                >
                   {cart.length === 0 ? (
                     <div className="px-4 py-4 text-sm text-gray-500 text-center">
                       Your cart is empty
@@ -214,7 +232,7 @@ const Navbar = () => {
                           onClick={handleCheckout}
                           className="w-full bg-emerald-600 text-white py-2 rounded text-sm font-medium hover:bg-emerald-700"
                         >
-                          {user ? 'Proceed to Checkout' : 'Login to Checkout'}
+                          {isAuthenticated ? 'Proceed to Checkout' : 'Login to Checkout'}
                         </button>
                       </div>
                     </>
@@ -303,7 +321,11 @@ const Navbar = () => {
                 </Link>
               </div>
               <div className="px-4 py-3">
-                {user ? (
+                {isLoading ? (
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : isAuthenticated ? (
                   <>
                     <Link
                       to="/profile"
