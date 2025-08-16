@@ -237,7 +237,7 @@ const Sustainability = () => {
             <div className="bg-gradient-to-r from-leaf-green/10 to-sage-green-alt/10 p-8 rounded-2xl">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-leaf-green mb-2">2024</div>
+                  <div className="text-3xl font-bold text-leaf-green mb-2">2025</div>
                   <div className="text-muted-foreground">Current Year</div>
                 </div>
                 <div className="text-center">
