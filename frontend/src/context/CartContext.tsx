@@ -6,16 +6,17 @@ interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  size?: string; // Added size property
 }
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: Omit<CartItem, 'quantity'> | CartItem) => void;
-  removeFromCart: (id: string) => void;
+  removeFromCart: (id: string, size?: string) => void; // Updated to accept size
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
-  updateQuantity: (id: string, newQuantity: number) => void;
+  updateQuantity: (id: string, newQuantity: number, size?: string) => void; // Updated to accept size
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -45,35 +46,51 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [cart]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'> | CartItem) => {
-  setCart(prev => {
-    const existingItem = prev.find(i => i.id === item.id);
-    if (existingItem) {
-      return prev.map(i => 
-        i.id === item.id 
-          ? { 
-              ...i, 
-              quantity: i.quantity + ('quantity' in item ? item.quantity : 1) 
-            } 
-          : i
+    setCart(prev => {
+      // Create a unique identifier for the item (id + size)
+      const itemIdentifier = `${item.id}-${item.size || ''}`;
+      
+      const existingItemIndex = prev.findIndex(i => 
+        `${i.id}-${i.size || ''}` === itemIdentifier
       );
-    }
-    return [...prev, { ...item, quantity: 'quantity' in item ? item.quantity : 1 }];
-  });
-};
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+      if (existingItemIndex > -1) {
+        // Item with same ID and size exists, update quantity
+        return prev.map((i, index) => 
+          index === existingItemIndex 
+            ? { 
+                ...i, 
+                quantity: i.quantity + ('quantity' in item ? item.quantity : 1) 
+              } 
+            : i
+        );
+      }
+      
+      // New item, add to cart
+      return [...prev, { 
+        ...item, 
+        quantity: 'quantity' in item ? item.quantity : 1 
+      }];
+    });
   };
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+  const removeFromCart = (id: string, size?: string) => {
+    setCart(prev => prev.filter(item => 
+      !(item.id === id && item.size === size)
+    ));
+  };
+
+  const updateQuantity = (id: string, newQuantity: number, size?: string) => {
     if (newQuantity < 1) {
-      removeFromCart(id);
+      removeFromCart(id, size);
       return;
     }
 
     setCart(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item.id === id && item.size === size 
+          ? { ...item, quantity: newQuantity } 
+          : item
       )
     );
   };
