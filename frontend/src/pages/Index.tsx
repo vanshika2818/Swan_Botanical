@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { ArrowRight, Leaf, Award, Heart, ShieldCheck, Star, CheckCircle, Users } from 'lucide-react';
@@ -15,54 +16,14 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { OrganizationSchema } from '@/components/ui/schema';
 import heroImage from '@/assets/hero-botanical.jpg';
+import { getProducts } from '@/api/products';
+import { Product } from '@/types';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const Index = () => {
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Gentle Botanical Cleanser",
-      price: "₹899",
-      originalPrice: "₹1,199",
-      image: "/placeholder.svg",
-      description: "A mild, sulfate-free cleanser with chamomile and aloe vera",
-      rating: 4.8,
-      reviews: 324,
-      bestseller: true
-    },
-    {
-      id: 2,
-      name: "Vitamin C Brightening Serum",
-      price: "₹1,299",
-      originalPrice: "₹1,599",
-      image: "/placeholder.svg",
-      description: "Natural vitamin C from kakadu plum for radiant skin",
-      rating: 4.9,
-      reviews: 256,
-      bestseller: true
-    },
-    {
-      id: 3,
-      name: "Nourishing Night Cream",
-      price: "₹1,099",
-      originalPrice: "₹1,399",
-      image: "/placeholder.svg",
-      description: "Rich botanical oils for overnight skin repair",
-      rating: 4.7,
-      reviews: 189,
-      bestseller: false
-    },
-    {
-      id: 4,
-      name: "Hydrating Rose Mist",
-      price: "₹599",
-      originalPrice: "₹799",
-      image: "/placeholder.svg",
-      description: "Pure rose water toner for refreshed, glowing skin",
-      rating: 4.6,
-      reviews: 412,
-      bestseller: false
-    }
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const uspFeatures = [
     {
@@ -93,6 +54,37 @@ const Index = () => {
     "Carbon Neutral",
     "Ethically Sourced"
   ];
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true);
+        const allProducts = await getProducts();
+        
+        // Get best-selling products or highest rated if no best sellers
+        const bestSellers = allProducts.filter(product => product.isBestSeller);
+        
+        if (bestSellers.length >= 4) {
+          setFeaturedProducts(bestSellers.slice(0, 4));
+        } else {
+          // If not enough best sellers, get highest rated products
+          const highestRated = [...allProducts]
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, 4);
+          setFeaturedProducts(highestRated);
+        }
+        
+        setError(null);
+      } catch (err) {
+        setError('Failed to load featured products');
+        console.error('Error fetching featured products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,65 +162,81 @@ const Index = () => {
               Our most loved natural skincare essentials, trusted by thousands of customers
             </p>
           </div>
-          
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {featuredProducts.map((product) => (
-                <CarouselItem key={product.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                  <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-                    <CardContent className="p-0 relative">
-                      {product.bestseller && (
-                        <Badge className="absolute top-4 left-4 z-10 bg-primary text-primary-foreground font-open-sans">
-                          Bestseller
-                        </Badge>
-                      )}
-                      <div className="aspect-square bg-muted rounded-t-lg overflow-hidden">
-                        <img
-                          src={product.image}
-                          alt={`${product.name} - ${product.description}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-center mb-2">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-open-sans text-sm text-muted-foreground ml-1">
-                              {product.rating} ({product.reviews})
-                            </span>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-yellow-600 bg-yellow-50 p-4 rounded-lg">
+                {error} - Showing sample products
+              </p>
+            </div>
+          ) : (
+            <>
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {featuredProducts.map((product) => (
+                    <CarouselItem key={product._id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">
+                        <CardContent className="p-0 relative">
+                          {product.isBestSeller && (
+                            <Badge className="absolute top-4 left-4 z-10 bg-primary text-primary-foreground font-open-sans">
+                              Bestseller
+                            </Badge>
+                          )}
+                          <div className="aspect-square bg-muted rounded-t-lg overflow-hidden">
+                            <img
+                              src={product.images[0] || '/placeholder.svg'}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
                           </div>
-                        </div>
-                        <h3 className="font-lora text-xl font-semibold text-card-foreground mb-2">
-                          {product.name}
-                        </h3>
-                        <p className="font-open-sans text-muted-foreground mb-4 text-sm">
-                          {product.description}
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="font-lora text-2xl font-bold text-primary">
-                              {product.price}
-                            </span>
-                            <span className="font-open-sans text-sm text-muted-foreground line-through">
-                              {product.originalPrice}
-                            </span>
+                          <div className="p-6">
+                            <div className="flex items-center mb-2">
+                              <div className="flex items-center">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="font-open-sans text-sm text-muted-foreground ml-1">
+                                  {product.rating} ({product.reviewCount})
+                                </span>
+                              </div>
+                            </div>
+                            <h3 className="font-lora text-xl font-semibold text-card-foreground mb-2">
+                              {product.name}
+                            </h3>
+                            <p className="font-open-sans text-muted-foreground mb-4 text-sm">
+                              {product.description}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <span className="font-lora text-2xl font-bold text-primary">
+                                  ₹{product.price}
+                                </span>
+                                {product.originalPrice && (
+                                  <span className="font-open-sans text-sm text-muted-foreground line-through">
+                                    ₹{product.originalPrice}
+                                  </span>
+                                )}
+                              </div>
+                              <Button size="sm" className="font-open-sans bg-primary hover:bg-primary/90" asChild>
+                                <Link to={`/products/${product._id}`}>
+                                  View Details
+                                </Link>
+                              </Button>
+                            </div>
                           </div>
-                          <Button size="sm" className="font-open-sans bg-primary hover:bg-primary/90" asChild>
-                            <Link to={`/products/${product.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4" />
-            <CarouselNext className="right-4" />
-          </Carousel>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </Carousel>
+            </>
+          )}
           
           <div className="text-center mt-12">
             <Button asChild variant="outline" size="lg" className="font-open-sans">

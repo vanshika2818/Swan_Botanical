@@ -27,7 +27,7 @@ const mockProducts: Product[] = [
     fullIngredients: "Aqua, Chamomile, Aloe Vera",
     howToUse: "Use morning and evening",
     isNewProduct: true,
-    isBestSeller: false,
+    isBestSeller: true,
     createdAt: new Date().toISOString(),
     sizes: []
   },
