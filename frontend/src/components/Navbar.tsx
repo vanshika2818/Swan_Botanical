@@ -1,35 +1,41 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Leaf, Search, ShoppingCart, User, Zap } from 'lucide-react';
+import { Menu, X, Leaf, Search, ShoppingCart, User, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CartIcon } from './ui/CartIcon';
+import { useWishlist } from '../context/WishlistContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const Navbar = () => {
-  // State management
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
+  const [showWishlistDropdown, setShowWishlistDropdown] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  // Hooks
   const { isAuthenticated, user, logout, loading: authLoading } = useAuth();
   const { cart, cartCount, removeFromCart, cartTotal } = useCart();
+  const { wishlist, removeFromWishlist } = useWishlist();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Close dropdowns when auth state changes
   useEffect(() => {
     setShowProfileDropdown(false);
     setShowCartDropdown(false);
+    setShowWishlistDropdown(false);
   }, [isAuthenticated]);
 
-  // Navigation items
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
@@ -40,7 +46,6 @@ const Navbar = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
-  // Helper functions
   const isActive = (path: string) => location.pathname === path;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -61,6 +66,15 @@ const Navbar = () => {
     }
   };
 
+  const handleWishlistClick = () => {
+    if (!isAuthenticated) {
+      setAuthModalMode('login');
+      setAuthModalOpen(true);
+    } else {
+      setShowWishlistDropdown(true);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="bg-white shadow-sm sticky top-0 z-50 h-16 flex items-center justify-center">
@@ -74,24 +88,18 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center space-x-2"
-            aria-label="Swan Botanicals Home"
-          >
-            <Leaf className="h-8 w-8 text-emerald-600" aria-hidden="true" />
-            <span className="font-bold text-xl text-gray-900">
-              Swan Botanicals
-            </span>
+          <Link to="/" className="flex items-center space-x-2">
+            <Leaf className="h-8 w-8 text-emerald-600" />
+            <span className="font-bold text-xl text-gray-900">Swan Botanicals</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <div className="hidden md:flex space-x-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                className={`px-3 py-2 text-sm font-medium ${
                   isActive(item.href)
                     ? 'text-emerald-600 border-b-2 border-emerald-600'
                     : 'text-gray-700 hover:text-emerald-600'
@@ -104,84 +112,70 @@ const Navbar = () => {
 
           {/* Right-side icons */}
           <div className="hidden md:flex items-center space-x-6">
-            {/* Search Icon */}
-            <button 
-              onClick={() => setShowSearch(!showSearch)}
-              className="p-2"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            
 
-            {/* Profile Icon with Dropdown */}
+            {/* Wishlist Icon */}
             <div className="relative">
               <button 
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                onClick={handleWishlistClick} 
                 className="p-2 relative"
-                aria-label="User profile"
               >
-                <User className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
-                {isAuthenticated && <Zap className="absolute -top-1 left-3 h-3 w-3 text-yellow-500" />}
+                <Heart className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlist.length}
+                  </span>
+                )}
               </button>
-              
+            </div>
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button onClick={() => setShowProfileDropdown(!showProfileDropdown)} className="p-2">
+                <User className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
+              </button>
               {showProfileDropdown && (
-                <div 
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
-                  onMouseLeave={() => setShowProfileDropdown(false)}
-                >
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   {isAuthenticated ? (
                     <>
                       <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                        Hello, User
+                        Hello, {user?.name || 'User'}
                       </div>
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      <Link 
+                        to="/profile" 
+                        className="block px-4 py-2 text-sm hover:bg-gray-100"
                         onClick={() => setShowProfileDropdown(false)}
                       >
                         My Profile
                       </Link>
                       <button
-                        onClick={() => {
-                          logout();
-                          setShowProfileDropdown(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => logout()}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                       >
                         Logout
                       </button>
                     </>
                   ) : (
-                    <>
-                      <button
-                        onClick={() => {
-                          setAuthModalMode('login');
-                          setAuthModalOpen(true);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Login
-                      </button>
-                      
-                    </>
+                    <button
+                      onClick={() => {
+                        setAuthModalMode('login');
+                        setAuthModalOpen(true);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Login
+                    </button>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Cart Icon with Dropdown */}
+            {/* Cart */}
             <div className="relative">
-              <CartIcon 
-                itemCount={cartCount}
-                onClick={() => setShowCartDropdown(!showCartDropdown)}
-              />
-              
+              <CartIcon itemCount={cartCount} onClick={() => setShowCartDropdown(!showCartDropdown)} />
               {showCartDropdown && (
-                <div 
-                  className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50"
-                  onMouseLeave={() => setShowCartDropdown(false)}
-                >
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50">
                   {cart.length === 0 ? (
                     <div className="px-4 py-4 text-sm text-gray-500 text-center">
                       Your cart is empty
@@ -197,10 +191,9 @@ const Navbar = () => {
                                 {item.quantity} × ₹{item.price.toFixed(2)}
                               </p>
                             </div>
-                            <button 
+                            <button
                               className="text-red-500 text-xs"
                               onClick={() => removeFromCart(item.id)}
-                              aria-label={`Remove ${item.name} from cart`}
                             >
                               Remove
                             </button>
@@ -210,9 +203,7 @@ const Navbar = () => {
                       <div className="px-4 py-2 border-t">
                         <div className="flex justify-between mb-2">
                           <span className="text-sm font-medium">Total:</span>
-                          <span className="text-sm font-medium">
-                            ₹{cartTotal.toFixed(2)}
-                          </span>
+                          <span className="text-sm font-medium">₹{cartTotal.toFixed(2)}</span>
                         </div>
                         <button
                           onClick={handleCheckout}
@@ -230,121 +221,139 @@ const Navbar = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-              aria-expanded={isOpen}
-              className="min-h-[44px] min-w-[44px] p-2"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
 
-        {/* Search Bar (shows when search icon clicked) */}
-        {showSearch && (
-          <div className="border-t py-3">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex items-center max-w-md mx-auto border rounded overflow-hidden"
-            >
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="flex-1 px-3 py-2 outline-none"
-                aria-label="Search products"
-              />
-              <button
-                type="submit"
-                className="bg-emerald-600 text-white px-4 py-2"
-                aria-label="Submit search"
-              >
-                Search
-              </button>
-            </form>
-          </div>
-        )}
-
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden" role="navigation" aria-label="Mobile navigation">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+          <div className="md:hidden bg-white border-t">
+            <div className="px-2 pt-2 pb-3 space-y-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`block px-4 py-3 text-base font-medium transition-colors duration-200 min-h-[44px] ${
+                  className={`block px-3 py-2 text-base font-medium ${
                     isActive(item.href)
-                      ? "text-emerald-600 bg-emerald-50"
-                      : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
+                      ? 'text-emerald-600 bg-emerald-50'
+                      : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setIsOpen(false)}
-                  aria-current={isActive(item.href) ? "page" : undefined}
                 >
                   {item.name}
                 </Link>
               ))}
-              
-              {/* Mobile Cart and Profile Links */}
-              <div className="px-4 py-3 border-t">
-                <Link
-                  to="/cart"
-                  className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Cart {cartCount > 0 && `(${cartCount})`}
-                </Link>
-              </div>
-              <div className="px-4 py-3">
-                {isAuthenticated ? (
-                  <>
-                    <Link
-                      to="/profile"
-                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <User className="h-5 w-5 mr-2" />
-                      My Account
-                    </Link>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsOpen(false);
-                      }}
-                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600 mt-2"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
+              <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="flex items-center px-5">
+                  <div className="text-sm font-medium text-gray-500">
+                    {isAuthenticated ? `Hello, ${user?.name || 'User'}` : 'Welcome'}
+                  </div>
+                </div>
+                <div className="mt-3 px-2 space-y-1">
+                  {isAuthenticated ? (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50 rounded-md"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        My Profile
+                      </Link>
+                      <Link
+                        to="/wishlist"
+                        className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50 rounded-md"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Wishlist
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50 rounded-md"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
                     <button
                       onClick={() => {
                         setAuthModalMode('login');
                         setAuthModalOpen(true);
                         setIsOpen(false);
                       }}
-                      className="flex items-center text-base font-medium text-gray-700 hover:text-emerald-600"
+                      className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-emerald-600 hover:bg-gray-50 rounded-md"
                     >
-                      <User className="h-5 w-5 mr-2" />
                       Login
                     </button>
-                    
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
+
+        
       </div>
 
+      {/* Wishlist Dialog */}
+      <Dialog open={showWishlistDropdown} onOpenChange={setShowWishlistDropdown}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>My Wishlist</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {wishlist.length === 0 ? (
+              <div className="text-center py-8">
+                <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Your wishlist is empty</p>
+                <Button className="mt-4" onClick={() => setShowWishlistDropdown(false)}>
+                  Continue Shopping
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {wishlist.map((item) => (
+                  <div key={item._id} className="flex items-center border rounded-lg p-3">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-16 w-16 object-cover rounded-md"
+                    />
+                    <div className="ml-4 flex-1">
+                      <h3 className="font-medium">{item.name}</h3>
+                      <p className="text-sm text-gray-500">₹{item.price}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFromWishlist(item._id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <Button asChild>
+                    <Link to="/wishlist" onClick={() => setShowWishlistDropdown(false)}>
+                      View Full Wishlist
+                    </Link>
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowWishlistDropdown(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Auth Modal */}
-      <AuthModal 
+      <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode={authModalMode}

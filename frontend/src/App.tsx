@@ -6,6 +6,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
+import WishlistPage from "@/pages/WishlistPage";
+import { WishlistProvider } from '@/context/WishlistContext';
+
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
@@ -45,38 +48,42 @@ const App = () => (
   <BrowserRouter>
     <AuthProvider>
       <CartProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={<LoadingSpinner fullScreen />}>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Index />} />
-                  <Route path="about" element={<About />} />
-                  <Route path="products" element={<Products />} />
-                  <Route path="products/:id" element={<ProductDetails />} />
-                  <Route path="ingredients" element={<Ingredients />} />
-                  <Route path="sustainability" element={<Sustainability />} />
-                  <Route path="blog" element={<Blog />} />
-                  <Route path="contact" element={<Contact />} />
-                  <Route path="cart" element={<CartPage />} />
-                  <Route path="checkout" element={<CheckoutPage />} />
-                  <Route path="search" element={<SearchResultsPage />} />
-                  <Route path="login" element={<LoginPage />} />
-                  <Route path="register" element={<RegisterPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </Suspense>
-            {process.env.NODE_ENV === 'development' && (
-              <ReactQueryDevtools initialIsOpen={false} />
-            )}
-          </TooltipProvider>
-        </QueryClientProvider>
+        <WishlistProvider>   {/* ✅ wrap here */}
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Suspense fallback={<LoadingSpinner fullScreen />}>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<Index />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="products" element={<Products />} />
+                    <Route path="products/:id" element={<ProductDetails />} />
+                    <Route path="ingredients" element={<Ingredients />} />
+                    <Route path="sustainability" element={<Sustainability />} />
+                    <Route path="blog" element={<Blog />} />
+                    <Route path="contact" element={<Contact />} />
+                    <Route path="cart" element={<CartPage />} />
+                    <Route path="checkout" element={<CheckoutPage />} />
+                    <Route path="search" element={<SearchResultsPage />} />
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="register" element={<RegisterPage />} />
+                    <Route path="wishlist" element={<WishlistPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+              {process.env.NODE_ENV === 'development' && (
+                <ReactQueryDevtools initialIsOpen={false} />
+              )}
+            </TooltipProvider>
+          </QueryClientProvider>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   </BrowserRouter>
 );
+
 
 export default App;

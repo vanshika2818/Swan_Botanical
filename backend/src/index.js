@@ -6,9 +6,9 @@ const cors = require("cors");
 // Initialize Express
 const app = express();
 
-// Middleware - Fix CORS to allow your FRONTEND, not backend
+// Middleware
 app.use(cors({
-  origin: '*', // Allow all origins temporarily
+  origin: process.env.FRONTEND_URL || "*",
   credentials: true
 }));
 app.use(express.json());
@@ -21,51 +21,31 @@ const productRoutes = require("./routes/productRoutes");
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 
-// Health check route
+// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    message: 'Server is running!',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
+  res.json({ status: "ok", service: "Swan Botanicals API" });
 });
 
 // Root route
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Swan Botanicals API',
-    version: '1.0.0',
+  res.json({
+    message: "Welcome to Swan Botanicals API",
     endpoints: {
-      products: '/api/products',
-      health: '/api/health',
-      auth: '/api/auth'
+      auth: "/api/auth",
+      products: "/api/products",
+      health: "/api/health"
     }
   });
 });
 
-// Database connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/swan-botanicals')
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch(err => {
-    console.error("MongoDB connection error:", err);
+// DB connection
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/swan-botanicals")
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => {
+    console.error("❌ DB Error:", err);
     process.exit(1);
   });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
-
-// 404 handler - MUST be last
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
 // Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port http://localhost:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  console.log(`Products API: http://localhost:${PORT}/api/products`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
