@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Leaf, Search, ShoppingCart, User, Heart } from 'lucide-react';
+import { Menu, X, Leaf, Search, ShoppingCart, User, Heart, Zap } from 'lucide-react'; // Added Zap icon
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -129,16 +129,24 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* Profile Dropdown */}
+            {/* Profile Dropdown with Thunder Icon */}
             <div className="relative">
-              <button onClick={() => setShowProfileDropdown(!showProfileDropdown)} className="p-2">
+              <button 
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)} 
+                className="p-2 flex items-center"
+              >
                 <User className="h-5 w-5 text-gray-800 hover:text-emerald-600" />
+                {/* Thunder icon for logged-in users */}
+                {isAuthenticated && (
+                  <Zap className="h-4 w-4 ml-1 text-amber-500 fill-amber-500" />
+                )}
               </button>
               {showProfileDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   {isAuthenticated ? (
                     <>
-                      <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                      <div className="px-4 py-2 text-sm text-gray-700 border-b flex items-center">
+                        <Zap className="h-4 w-4 mr-1 text-amber-500 fill-amber-500" />
                         Hello, {user?.name || 'User'}
                       </div>
                       <Link 
@@ -248,7 +256,14 @@ const Navbar = () => {
               <div className="pt-4 pb-3 border-t border-gray-200">
                 <div className="flex items-center px-5">
                   <div className="text-sm font-medium text-gray-500">
-                    {isAuthenticated ? `Hello, ${user?.name || 'User'}` : 'Welcome'}
+                    {isAuthenticated ? (
+                      <span className="flex items-center">
+                        <Zap className="h-4 w-4 mr-1 text-amber-500 fill-amber-500" />
+                        Hello, {user?.name || 'User'}
+                      </span>
+                    ) : (
+                      'Welcome'
+                    )}
                   </div>
                 </div>
                 <div className="mt-3 px-2 space-y-1">
