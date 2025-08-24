@@ -48,16 +48,16 @@ const Products = () => {
         setProducts(data);
         setError(null);
       } catch (err) {
-        setError('Failed to load products from API. Showing demo products.');
-        console.error('Error fetching products:', err);
-        // Use empty array instead of showing error
+        setError(err instanceof Error ? err.message : 'Failed to load products');
         setProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    // Add debounce for search
+    const timeoutId = setTimeout(fetchProducts, 300);
+    return () => clearTimeout(timeoutId);
   }, [selectedCategory, searchTerm]);
 
   const handleAddToCart = (product: Product) => {
@@ -173,6 +173,9 @@ const Products = () => {
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                        }}
                       />
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-2">
@@ -218,7 +221,7 @@ const Products = () => {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < Math.floor(product.rating)
+                                i < Math.floor(product.rating || 0)
                                   ? 'text-yellow-400 fill-current'
                                   : 'text-gray-300'
                               }`}
@@ -226,14 +229,14 @@ const Products = () => {
                           ))}
                         </div>
                         <span className="ml-2 text-sm text-gray-600">
-                          {product.rating} ({product.reviewCount} reviews)
+                          {product.rating || 0} ({product.reviewCount || 0} reviews)
                         </span>
                       </div>
 
                       <div className="mb-4">
                         <span className="text-sm text-gray-500">Key Benefits:</span>
                         <ul className="mt-1 space-y-1">
-                          {product.benefits.slice(0, 3).map((benefit, index) => (
+                          {(product.benefits || []).slice(0, 3).map((benefit, index) => (
                             <li key={index} className="flex items-start">
                               <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5 mr-2 flex-shrink-0" />
                               <span className="text-sm">{benefit}</span>
@@ -266,9 +269,10 @@ const Products = () => {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleAddToCart(product)}
+                        disabled={!product.stock || product.stock <= 0}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
+                        {(!product.stock || product.stock <= 0) ? "Out of Stock" : "Add to Cart"}
                       </Button>
                     </div>
                   </CardContent>

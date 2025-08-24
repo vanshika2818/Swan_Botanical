@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { Product } from '@/types';
 
-const API_URL = 'https://swan-botanical.onrender.com/api';
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-production-api.com/api' 
+  : 'http://localhost:3000/api';
 
 // Create axios instance with better error handling
 const api = axios.create({
@@ -9,57 +11,41 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Mock data fallback
-const mockProducts: Product[] = [
-  {
-    _id: '1',
-    name: "Gentle Botanical Cleanser",
-    description: "A mild, sulfate-free cleanser with chamomile and aloe vera",
-    price: 899,
-    originalPrice: 1099,
-    category: "cleansers",
-    images: ["/placeholder-product.jpg"],
-    stock: 50,
-    rating: 4.8,
-    reviewCount: 124,
-    benefits: ["Gently removes impurities", "Maintains skin's natural moisture"],
-    keyIngredients: [{ name: "Chamomile", benefit: "Soothing", concentration: "5%" }],
-    fullIngredients: "Aqua, Chamomile, Aloe Vera",
-    howToUse: "Use morning and evening",
-    isNewProduct: true,
-    isBestSeller: true,
-    createdAt: new Date().toISOString(),
-    sizes: []
+// Request interceptor to add auth token if available
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
-  {
-    _id: '2',
-    name: "Vitamin C Brightening Serum",
-    description: "Natural vitamin C serum for radiant skin",
-    price: 1299,
-    originalPrice: 1599,
-    category: "serums",
-    images: ["/placeholder-product.jpg"],
-    stock: 30,
-    rating: 4.9,
-    reviewCount: 256,
-    benefits: ["Brightens skin tone", "Reduces dark spots"],
-    keyIngredients: [{ name: "Vitamin C", benefit: "Antioxidant", concentration: "15%" }],
-    fullIngredients: "Aqua, Vitamin C, Hyaluronic Acid",
-    howToUse: "Apply 2-3 drops daily",
-    isNewProduct: false,
-    isBestSeller: true,
-    createdAt: new Date().toISOString(),
-    sizes: []
+  (error) => {
+    return Promise.reject(error);
   }
-];
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid, redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const response = await api.get('/products');
     return response.data;
   } catch (error) {
-    console.error('API failed, using mock data');
-    return mockProducts;
+    console.error('Error fetching products:', error);
+    throw new Error('Failed to fetch products');
   }
 };
 
@@ -69,8 +55,7 @@ export const getProductById = async (id: string): Promise<Product> => {
     return response.data;
   } catch (error) {
     console.error('Error fetching product:', error);
-    // Return first mock product as fallback
-    return mockProducts[0];
+    throw new Error(`Product with ID ${id} not found`);
   }
 };
 
@@ -80,21 +65,45 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
     return response.data;
   } catch (error) {
     console.error('Error fetching products by category:', error);
-    // Filter mock products by category
-    return mockProducts.filter(p => p.category === category);
+    throw new Error(`Failed to fetch products in category ${category}`);
   }
 };
 
 export const searchProducts = async (query: string): Promise<Product[]> => {
   try {
-    const response = await api.get(`/products/search/${query}`);
+    const response = await api.get(`/products/search?q=${encodeURIComponent(query)}`);
     return response.data;
   } catch (error) {
     console.error('Error searching products:', error);
-    // Filter mock products by search query
-    return mockProducts.filter(p => 
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.description.toLowerCase().includes(query.toLowerCase())
-    );
+    throw new Error('Failed to search products');
+  }
+};
+
+export const createProduct = async (productData: Partial<Product>): Promise<Product> => {
+  try {
+    const response = await api.post('/products', productData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw new Error('Failed to create product');
+  }
+};
+
+export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
+  try {
+    const response = await api.put(`/products/${id}`, productData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw new Error('Failed to update product');
+  }
+};
+
+export const deleteProduct = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/products/${id}`);
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw new Error('Failed to delete product');
   }
 };
